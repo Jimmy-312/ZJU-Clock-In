@@ -98,20 +98,21 @@ class ClockIn(object):
             html = res.content.decode()
 
         try:
-            new_info_tmp = json.loads(re.findall(r'def = ({[^\n]+})', html)[0])
-            new_id = new_info_tmp['id']
+            old_infos = re.findall(r'oldInfo: ({[^\n]+})', html)
             name = re.findall(r'realname: "([^\"]+)",', html)[0]
             self.name = name
-            number = re.findall(r"number: '([^\']+)',", html)[0]
-            old_infos = re.findall(r'oldInfo: ({[^\n]+})', html)
+            
             
             if len(old_infos) != 0:
                 old_info = json.loads(old_infos[0])
             else:
                 return 0
                 # raise RegexMatchError("未发现缓存信息，请先至少手动成功打卡一次再运行脚本")
-             
-             
+
+            new_info_tmp = json.loads(re.findall(r'def = ({[^\n]+})', html)[0])
+            new_id = new_info_tmp['id']
+            number = re.findall(r"number: '([^\']+)',", html)[0]
+            
 
         except IndexError:
             raise RegexMatchError('Relative info not found in html with regex')
@@ -246,3 +247,4 @@ if __name__ == "__main__":
     except Exception:
         exit(1)
     
+
