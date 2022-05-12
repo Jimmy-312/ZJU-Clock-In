@@ -30,4 +30,4 @@ jobs:
           URL: ${{ secrets.URL }}
           KEY: ${{ secrets.KEY }}
         run: |
-          python3 clock-in.py ${KEY} ${URL} ${{ secrets.SJL }} ${{ secrets.WHY }} ${{ secrets.SZY }} ${{ secrets.ZXT }}
+          python3 clock-in.py ${KEY} ${URL} ${{ secrets.SJL }} ${{ secrets.WHY }} ${{ secrets.SZY }} ${{ secrets.ZXT }} ${{ secrets.LCY }} ${{ secrets.TWX }} 
