@@ -7,7 +7,7 @@ on:
   watch:
     types: started
   schedule:
-    - cron: 0 */8 * * *
+    - cron: 0 2,13 * * *
 
 jobs:
   ClockIn:
@@ -24,9 +24,10 @@ jobs:
         run: |
           pip3 install requests
           pip3 install ddddocr
+          pip3 install dingtalkchatbot
       - name: Clock In
         env:
-          ACCOUNT: ${{ secrets.ACCOUNT }}
-          PASSWORD: ${{ secrets.PASSWORD }}
+          URL: ${{ secrets.URL }}
+          KEY: ${{ secrets.KEY }}
         run: |
-          python3 clock-in.py ${ACCOUNT} ${PASSWORD} ${EAI_SESS}
+          python3 clock-in.py ${URL} ${KEY} ${{ secrets.SJL }} ${{ secrets.WHY }}
