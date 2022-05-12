@@ -98,22 +98,26 @@ class ClockIn(object):
             html = res.content.decode()
 
         try:
-            old_infos = re.findall(r'oldInfo: ({[^\n]+})', html)
-            if len(old_infos) != 0:
-                old_info = json.loads(old_infos[0])
-            else:
-                raise RegexMatchError("未发现缓存信息，请先至少手动成功打卡一次再运行脚本")
-
             new_info_tmp = json.loads(re.findall(r'def = ({[^\n]+})', html)[0])
             new_id = new_info_tmp['id']
             name = re.findall(r'realname: "([^\"]+)",', html)[0]
+            self.name = name
             number = re.findall(r"number: '([^\']+)',", html)[0]
+            old_infos = re.findall(r'oldInfo: ({[^\n]+})', html)
+            
+            if len(old_infos) != 0:
+                old_info = json.loads(old_infos[0])
+            else:
+                return 0
+                # raise RegexMatchError("未发现缓存信息，请先至少手动成功打卡一次再运行脚本")
+             
+             
+
         except IndexError:
             raise RegexMatchError('Relative info not found in html with regex')
         except json.decoder.JSONDecodeError:
             raise DecodeError('JSON decode error')
         
-        self.name = name
 
         new_info = old_info.copy()
         new_info['id'] = new_id
@@ -189,8 +193,10 @@ def main(eai_sess):
 
     print('正在获取个人信息...')
     try:
-        dk.get_info()
-        print('已成功获取个人信息')
+        if dk.get_info() != 0:
+            print('已成功获取个人信息')
+        else:
+            return dk.name + "请手动打卡一次。"
     except Exception as err:
         print('获取信息失败，请手动打卡，更多信息: ' + str(err))
         raise Exception
@@ -228,7 +234,10 @@ if __name__ == "__main__":
 
     try:
         for i in eai_sess:
-            msg = main(i)
+            try:
+                msg = main(i)
+            except:
+                print("err")
             if msg != None:
                 msg_list.append(msg)
         msg_list = [(datetime.datetime.now() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')] + msg_list
