@@ -232,6 +232,7 @@ if __name__ == "__main__":
             if msg != None:
                 msg_list.append(msg)
         msg_list = [datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')] + msg_list
-        print("\n".join(msg_list))
+        # print("\n".join(msg_list))
+        dk.sendDing("\n".join(msg_list))
     except Exception:
         exit(1)
