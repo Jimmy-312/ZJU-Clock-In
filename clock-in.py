@@ -210,7 +210,7 @@ def main(eai_sess):
             elif res['m'].find("验证码错误") != -1:  # 验证码错误
                 print('再次尝试')
                 time.sleep(5)
-                return main(eai_sess)
+                return main(key, url, eai_sess)
             else:
                 raise Exception
     except Exception:
@@ -233,6 +233,7 @@ if __name__ == "__main__":
                 msg_list.append(msg)
         msg_list = [datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')] + msg_list
         print("\n".join(msg_list))
-        dk.sendDing("\n".join(msg_list))
+        
     except Exception:
         exit(1)
+    dk.sendDing("\n".join(msg_list))
