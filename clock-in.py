@@ -35,7 +35,7 @@ class ClockIn(object):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36"
     }
 
-    def __init__(self, key, url, eai_sess):
+    def __init__(self, key, url, eai_sess = ""):
         self.key = key
         self.url = url
         self.eai_sess = eai_sess
@@ -43,8 +43,11 @@ class ClockIn(object):
         self.sess = requests.Session()
         self.ocr = ddddocr.DdddOcr()
 
+    def add_eai_sess(self, eai_sess):
+        self.eai_sess = eai_sess
         cookie_dict = {'eai-sess': self.eai_sess}
         self.sess.cookies = requests.cookies.cookiejar_from_dict(cookie_dict)
+
 
     def login(self):
         """Login to ZJU platform"""
@@ -173,7 +176,7 @@ class DecodeError(Exception):
     pass
 
 
-def main(key, url, eai_sess):
+def main(eai_sess):
     """Hit card process
     Arguments:
         eai-sess: (str) cookie of healthreport.zju.edu.cn/ncov/wap/default/index
@@ -182,7 +185,7 @@ def main(key, url, eai_sess):
           datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     print("🚌 打卡任务启动")
 
-    dk = ClockIn(key, url, eai_sess)
+    dk.add_eai_sess(eai_sess)
 
     print('正在获取个人信息...')
     try:
@@ -197,17 +200,17 @@ def main(key, url, eai_sess):
         res = dk.post()
         if str(res['e']) == '0':
             print(dk.name, '已为您打卡成功！')
-            dk.sendDing(dk.name + "打卡成功！")
+            return dk.name + "打卡成功！"
+            #dk.sendDing(dk.name + "打卡成功！")
         else:
             print(dk.name, res['m'])
             if res['m'].find("已经") != -1:  # 已经填报过了 不报错
                 # dk.sendDing(dk.name+'今日您已打卡！')
-                pass
+                return dk.name+'已打卡！'
             elif res['m'].find("验证码错误") != -1:  # 验证码错误
                 print('再次尝试')
                 time.sleep(5)
-                main(key, url, eai_sess)
-                pass
+                return main(key, url, eai_sess)
             else:
                 raise Exception
     except Exception:
@@ -220,8 +223,15 @@ if __name__ == "__main__":
     url = sys.argv[2]
     eai_sess = sys.argv[3:]
 
+    msg_list = []
+    dk = ClockIn(key, url)
+
     try:
         for i in eai_sess:
-            main(key, url, i)
+            msg = main(i)
+            if msg != None:
+                msg_list.append(msg)
+        msg_list = [datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')] + msg_list
+        print("\n".join(msg_list))
     except Exception:
         exit(1)
