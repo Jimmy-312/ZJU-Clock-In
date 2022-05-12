@@ -11,11 +11,16 @@ import sys
 import ddddocr
 
 
+ 
+from dingtalkchatbot.chatbot import DingtalkChatbot
+
+
+
+
 class ClockIn(object):
     """Hit card class
     Attributes:
-        username: (str) 浙大统一认证平台用户名（一般为学号）
-        password: (str) 浙大统一认证平台密码
+        eai_sess: (str) cookie of healthreport.zju.edu.cn/ncov/wap/default/index
         LOGIN_URL: (str) 登录url
         BASE_URL: (str) 打卡首页url
         SAVE_URL: (str) 提交打卡url
@@ -27,14 +32,19 @@ class ClockIn(object):
     SAVE_URL = "https://healthreport.zju.edu.cn/ncov/wap/default/save"
     CAPTCHA_URL = 'https://healthreport.zju.edu.cn/ncov/wap/default/code'
     HEADERS = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36"
     }
-    
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
+
+    def __init__(self, key, url, eai_sess):
+        self.key = key
+        self.url = url
+        self.eai_sess = eai_sess
+        self.name = ""
         self.sess = requests.Session()
         self.ocr = ddddocr.DdddOcr()
+
+        cookie_dict = {'eai-sess': self.eai_sess}
+        self.sess.cookies = requests.cookies.cookiejar_from_dict(cookie_dict)
 
     def login(self):
         """Login to ZJU platform"""
@@ -52,7 +62,8 @@ class ClockIn(object):
             'execution': execution,
             '_eventId': 'submit'
         }
-        res = self.sess.post(url=self.LOGIN_URL, data=data, headers=self.HEADERS)
+        res = self.sess.post(url=self.LOGIN_URL,
+                             data=data, headers=self.HEADERS)
 
         # check if login successfully
         if '统一身份认证' in res.content.decode():
@@ -61,7 +72,8 @@ class ClockIn(object):
 
     def post(self):
         """Post the hitcard info"""
-        res = self.sess.post(self.SAVE_URL, data=self.info, headers=self.HEADERS)
+        res = self.sess.post(self.SAVE_URL, data=self.info,
+                             headers=self.HEADERS)
         return json.loads(res.text)
 
     def get_date(self):
@@ -97,6 +109,8 @@ class ClockIn(object):
             raise RegexMatchError('Relative info not found in html with regex')
         except json.decoder.JSONDecodeError:
             raise DecodeError('JSON decode error')
+        
+        self.name = name
 
         new_info = old_info.copy()
         new_info['id'] = new_id
@@ -134,6 +148,13 @@ class ClockIn(object):
         M_int = int(M_str, 16)
         result_int = pow(password_int, e_int, M_int)
         return hex(result_int)[2:].rjust(128, '0')
+    
+    def sendDing(self, msg):
+        webhook = self.url
+        secret = self.key
+
+        robot = DingtalkChatbot(webhook,secret=secret,pc_slide=True,fail_notice=True)
+        robot.send_text(msg=msg,is_at_all=False)
 
 
 # Exceptions
@@ -152,25 +173,16 @@ class DecodeError(Exception):
     pass
 
 
-def main(username, password):
+def main(key, url, eai_sess):
     """Hit card process
     Arguments:
-        username: (str) 浙大统一认证平台用户名（一般为学号）
-        password: (str) 浙大统一认证平台密码
+        eai-sess: (str) cookie of healthreport.zju.edu.cn/ncov/wap/default/index
     """
     print("\n[Time] %s" %
           datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     print("🚌 打卡任务启动")
 
-    dk = ClockIn(username, password)
-
-    print("登录到浙大统一身份认证平台...")
-    try:
-        dk.login()
-        print("已登录到浙大统一身份认证平台")
-    except Exception as err:
-        print(str(err))
-        raise Exception
+    dk = ClockIn(key, url, eai_sess)
 
     print('正在获取个人信息...')
     try:
@@ -184,15 +196,17 @@ def main(username, password):
     try:
         res = dk.post()
         if str(res['e']) == '0':
-            print('已为您打卡成功！')
+            print(dk.name, '已为您打卡成功！')
+            dk.sendDing(dk.name + "打卡成功！")
         else:
-            print(res['m'])
-            if res['m'].find("已经") != -1: # 已经填报过了 不报错
+            print(dk.name, res['m'])
+            if res['m'].find("已经") != -1:  # 已经填报过了 不报错
+                # dk.sendDing(dk.name+'今日您已打卡！')
                 pass
-            elif res['m'].find("验证码错误") != -1: # 验证码错误
+            elif res['m'].find("验证码错误") != -1:  # 验证码错误
                 print('再次尝试')
                 time.sleep(5)
-                main(username, password)
+                main(key, url, eai_sess)
                 pass
             else:
                 raise Exception
@@ -202,9 +216,12 @@ def main(username, password):
 
 
 if __name__ == "__main__":
-    username = sys.argv[1]
-    password = sys.argv[2]
+    key = sys.argv[1]
+    url = sys.argv[2]
+    eai_sess = sys.argv[3:]
+
     try:
-        main(username, password)
+        for i in eai_sess:
+            main(key, url, i)
     except Exception:
         exit(1)
