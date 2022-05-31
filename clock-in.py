@@ -41,7 +41,7 @@ class ClockIn(object):
         self.eai_sess = eai_sess
         self.name = ""
         self.sess = requests.Session()
-        self.ocr = ddddocr.DdddOcr()
+        # self.ocr = ddddocr.DdddOcr()
 
     def add_eai_sess(self, eai_sess):
         self.eai_sess = eai_sess
