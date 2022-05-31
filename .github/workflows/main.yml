@@ -23,11 +23,10 @@ jobs:
       - name: Install packages
         run: |
           pip3 install requests
-          pip3 install ddddocr
           pip3 install dingtalkchatbot
       - name: Clock In
         env:
           URL: ${{ secrets.URL }}
           KEY: ${{ secrets.KEY }}
         run: |
-          python3 clock-in.py ${KEY} ${URL} ${{ secrets.SJL }} ${{ secrets.SZY }} ${{ secrets.ZXT }} ${{ secrets.LCY }} ${{ secrets.TWX }} 
+          python3 clock-in.py ${KEY} ${URL} ${{ secrets.SJL }} ${{ secrets.WHY }} ${{ secrets.SZY }} ${{ secrets.ZXT }} ${{ secrets.LCY }} ${{ secrets.TWX }} 
