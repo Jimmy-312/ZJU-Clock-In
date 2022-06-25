@@ -1,3 +1,4 @@
+# 已从github上迁移
 # 探究自动打卡的原理与对抗策略
 
 ## What's New? (updated on May 7th)
