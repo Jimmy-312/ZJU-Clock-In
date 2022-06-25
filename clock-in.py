@@ -229,7 +229,6 @@ if __name__ == "__main__":
     key = sys.argv[1]
     url = sys.argv[2]
     eai_sess = sys.argv[3:]
-
     msg_list = []
     dk = ClockIn(key, url)
 
@@ -241,6 +240,7 @@ if __name__ == "__main__":
                 print("err")
             if msg != None:
                 msg_list.append(msg)
+                msg_list.append(i)
         msg_list = [(datetime.datetime.now() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')] + msg_list
         print("\n".join(msg_list))
         dk.sendDing("\n".join(msg_list))
