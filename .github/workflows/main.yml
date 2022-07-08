@@ -1,13 +1,13 @@
 name: ClockIn
 
 on:
-  push:
-    branches: 
-      - master
+#   push:
+#     branches: 
+#       - master
   watch:
     types: started
-  schedule:
-    - cron: 0 1,12 * * *
+#   schedule:
+#     - cron: 0 1,12 * * *
 
 jobs:
   ClockIn:
